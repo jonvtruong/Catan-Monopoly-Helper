@@ -7,11 +7,21 @@ package jonvtruong.catan_monopoly_helper;
 public class ArrayMath{
     protected int getArrayQuotient(int[] hand, int[] cost){
         int lowest = 0;
+        int firstIndex =0;
 
         for (int i = 0; i < cost.length; i++) {
+            // find first non-zero index in cost
+            if (cost[i] != 0) {
+                firstIndex = i;
+                break;
+            }
+
+        }
+
+        for(int i=0; i < cost.length; i++){
             if(cost[i] != 0) {
                 int quotient = hand[i] / cost[i];
-                if(quotient<lowest || i==0){
+                if (quotient < lowest || i == firstIndex) {
                     lowest = quotient;
                 }
             }

@@ -9,6 +9,7 @@ import android.widget.GridLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
 
     Map<String, int[]> costs;
     int[] maxBuild = {15, 5, 34, 4}; /** road, settlement, dev card, city **/
+    int[] previousBuild = {0,0,0,0};
     /*
     Build Costs:
     road [1 1 0 0 0]
@@ -35,23 +37,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         handGrid = (GridLayout) findViewById(R.id.handGrid);
         buildGrid = (GridLayout) findViewById(R.id.buildGrid);
-        costs = new HashMap<String, int[]>();
+        costs = new HashMap<>();
         setDefaults();
     }
 
-    /** Called when the user taps the Submit button */
-    public void submitHand(View view) {
-        int[] numResource = new int[5];
-
-        for(int i=0; i<5; i++){ // saves hand into array
-            numResource[i]=getNumResource(i);
-        }
-
-        printBuild(calculateBuild(numResource));
-    }
-
     private void setDefaults(){
-        /** Hand**/
+        /* Hand*/
         for(int i=5; i<10; i++){
             NumberPicker pick = (NumberPicker) handGrid.getChildAt(i);
             pick.setMinValue(0);
@@ -59,13 +50,13 @@ public class MainActivity extends AppCompatActivity {
             pick.setValue(5);
         }
 
-        /** Costs **/
+        /* Costs */
         costs.put(buildName[0], new int[]{1, 1, 0, 0, 0}); //road
         costs.put(buildName[1], new int[]{1, 1, 1, 1, 0}); // settlement
         costs.put(buildName[2], new int[]{0, 0, 1, 1, 1}); // dev card
         costs.put(buildName[3], new int[]{0, 0, 0, 2, 3}); // city
 
-        /** Builds **/
+        /* Builds */
         for(int i=4; i<8; i++){
             NumberPicker pick = (NumberPicker) buildGrid.getChildAt(i);
             pick.setMinValue(0);
@@ -73,13 +64,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private int getNumResource(int index){
-        NumberPicker resource = (NumberPicker) handGrid.getChildAt(index+5);
-        return resource.getValue();
+    /** Called when the user taps the Submit button */
+    public void submitHand(View view) {
+        int[] numResource = new int[5];
+
+        for(int i=0; i<resourceName.length; i++){ // saves hand into array
+            numResource[i]=getNumResource(i);
+        }
+
+        setMaxHand();
+        setMaxBuild(calculateBuild(numResource));
     }
 
     private int[] calculateBuild(int[] hand){
-        int[] build = new int[4];
+        int[] build = new int[previousBuild.length];
         int[] tempHand = hand.clone();
         ArrayMath a = new ArrayMath();
 
@@ -88,16 +86,74 @@ public class MainActivity extends AppCompatActivity {
             Log.d("console", "before build: " + Arrays.toString(tempHand));
             build[i] = a.getArrayQuotient(tempHand, currentBuildCost); //get number of current item that can be built
             Log.d("console", buildName[i] + " built: " + build[i]);
-            tempHand = a.getArrayDifference(tempHand, currentBuildCost, build[i]); //subtract total build cost from hand balance
-            Log.d("console", "after build: " + Arrays.toString(tempHand));
+            // tempHand = a.getArrayDifference(tempHand, currentBuildCost, build[i]); //subtract total build cost from hand balance
+            //Log.d("console", "after build: " + Arrays.toString(tempHand));
         }
         return build;
     }
 
-    private void printBuild(int[] build){
+    private void setMaxBuild(int[] build){
         for(int i=0; i<build.length; i++){
             NumberPicker buildPicker = (NumberPicker) buildGrid.getChildAt(i+4);
-            buildPicker.setValue(build[i]);
+            if(build[i] < maxBuild[i]) {
+                buildPicker.setMaxValue(build[i]);
+            }
+        }
+    }
+
+    private void setMaxHand(){
+        for(int i=0; i<resourceName.length; i++){
+            NumberPicker picker = (NumberPicker) handGrid.getChildAt(i+5);
+            if(picker.getValue() < 24) {
+                picker.setMaxValue(picker.getValue());
+            }
+        }
+    }
+
+    private int getNumResource(int index){
+        NumberPicker resource = (NumberPicker) handGrid.getChildAt(index+5);
+        return resource.getValue();
+    }
+
+    /** Called when the user taps the Update button */
+    public void updateHand(View view) {
+        int[] currentHand = new int[resourceName.length];
+
+        for(int i=0; i<currentHand.length; i++){
+            currentHand[i] = getNumResource(i);
+        }
+
+        setHand(calculateHand(currentHand));
+    }
+
+    private int[] calculateHand(int[] hand){
+        int[] currentHand = hand.clone();
+        int[] currentBuild = new int[previousBuild.length];
+
+        ArrayMath a = new ArrayMath();
+
+        for(int i=0; i<previousBuild.length; i++){
+            currentBuild[i] = getBuild(i);
+        }
+
+        int[] changeBuild = a.getArrayDifference(currentBuild, previousBuild, 1);
+        previousBuild = currentBuild.clone();
+
+        for(int i=0; i<previousBuild.length; i++){
+            currentHand = a.getArrayDifference(currentHand, costs.get(buildName[i]), changeBuild[i]);
+        }
+        return currentHand;
+    }
+
+    private int getBuild(int index){
+        NumberPicker resource = (NumberPicker) buildGrid.getChildAt(index+4);
+        return resource.getValue();
+    }
+
+    private void setHand(int[] hand){
+        for(int i=0; i<hand.length; i++){
+            NumberPicker picker = (NumberPicker) handGrid.getChildAt(i+5);
+            picker.setValue(hand[i]);
         }
     }
 }
