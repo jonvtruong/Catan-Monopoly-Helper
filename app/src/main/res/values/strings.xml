@@ -1,9 +1,13 @@
 <resources>
     <string name="app_name">Catan Monopoly Helper</string>
-    <string name="Wood">Wood:</string>
-    <string name="Brick">Brick:</string>
-    <string name="Sheep">Sheep:</string>
-    <string name="Wheat">Wheat:</string>
-    <string name="Ore">Ore:</string>
+    <string name="Wood">Wood</string>
+    <string name="Brick">Brick</string>
+    <string name="Sheep">Sheep</string>
+    <string name="Wheat">Wheat</string>
+    <string name="Ore">Ore</string>
     <string name="Submit">Submit</string>
+    <string name="Road">Road</string>
+    <string name="Settlement">Settlement</string>
+    <string name="Development_Card">Dev Card</string>
+    <string name="City">City</string>
 </resources>

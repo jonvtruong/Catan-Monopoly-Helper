@@ -2,12 +2,103 @@ package jonvtruong.catan_monopoly_helper;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+//import android.content.Intent;
+import android.util.Log;
+import android.view.View;
+import android.widget.GridLayout;
+import android.widget.NumberPicker;
+import android.widget.TextView;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
+    GridLayout handGrid, buildGrid;
+    String[] resourceName = {"wood", "brick", "sheep", "wheat", "ore"};
+    String[] buildName = {"road", "settlement", "development card", "city"};
+
+    Map<String, int[]> costs;
+    int[] maxBuild = {15, 5, 34, 4}; /** road, settlement, dev card, city **/
+    /*
+    Build Costs:
+    road [1 1 0 0 0]
+    settlement [1 1 1 1 0]
+    dev card [0 0 1 1 1]
+    city [0 0 0 2 3]
+     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        handGrid = (GridLayout) findViewById(R.id.handGrid);
+        buildGrid = (GridLayout) findViewById(R.id.buildGrid);
+        costs = new HashMap<String, int[]>();
+        setDefaults();
+    }
+
+    /** Called when the user taps the Submit button */
+    public void submitHand(View view) {
+        int[] numResource = new int[5];
+
+        for(int i=0; i<5; i++){ // saves hand into array
+            numResource[i]=getNumResource(i);
+        }
+
+        printBuild(calculateBuild(numResource));
+    }
+
+    private void setDefaults(){
+        /** Hand**/
+        for(int i=5; i<10; i++){
+            NumberPicker pick = (NumberPicker) handGrid.getChildAt(i);
+            pick.setMinValue(0);
+            pick.setMaxValue(24);
+            pick.setValue(5);
+        }
+
+        /** Costs **/
+        costs.put(buildName[0], new int[]{1, 1, 0, 0, 0}); //road
+        costs.put(buildName[1], new int[]{1, 1, 1, 1, 0}); // settlement
+        costs.put(buildName[2], new int[]{0, 0, 1, 1, 1}); // dev card
+        costs.put(buildName[3], new int[]{0, 0, 0, 2, 3}); // city
+
+        /** Builds **/
+        for(int i=4; i<8; i++){
+            NumberPicker pick = (NumberPicker) buildGrid.getChildAt(i);
+            pick.setMinValue(0);
+            pick.setMaxValue(maxBuild[i-4]);
+        }
+    }
+
+    private int getNumResource(int index){
+        NumberPicker resource = (NumberPicker) handGrid.getChildAt(index+5);
+        return resource.getValue();
+    }
+
+    private int[] calculateBuild(int[] hand){
+        int[] build = new int[4];
+        int[] tempHand = hand.clone();
+        ArrayMath a = new ArrayMath();
+
+        for (int i=0; i<build.length; i++) {
+            int[] currentBuildCost = costs.get(buildName[i]); // get build to start calculating from array of buildName: road, settlement, dev card, city
+            Log.d("console", "before build: " + Arrays.toString(tempHand));
+            build[i] = a.getArrayQuotient(tempHand, currentBuildCost); //get number of current item that can be built
+            Log.d("console", buildName[i] + " built: " + build[i]);
+            tempHand = a.getArrayDifference(tempHand, currentBuildCost, build[i]); //subtract total build cost from hand balance
+            Log.d("console", "after build: " + Arrays.toString(tempHand));
+        }
+        return build;
+    }
+
+    private void printBuild(int[] build){
+        for(int i=0; i<build.length; i++){
+            NumberPicker buildPicker = (NumberPicker) buildGrid.getChildAt(i+4);
+            buildPicker.setValue(build[i]);
+        }
     }
 }
+
