@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
             pick.setMinValue(0);
             pick.setMaxValue(24);
             pick.setValue(5);
+            pick.setWrapSelectorWheel(false);
         }
 
         /* Costs */
@@ -61,6 +62,17 @@ public class MainActivity extends AppCompatActivity {
             NumberPicker pick = (NumberPicker) buildGrid.getChildAt(i);
             pick.setMinValue(0);
             pick.setMaxValue(maxBuild[i-4]);
+            pick.setWrapSelectorWheel(false);
+
+            pick.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() { // called whenever build is changed
+                @Override
+                public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                    int current = buildGrid.indexOfChild(picker);
+                    updateHand(picker); // every time build changed, update remaining hand
+                    // update max build for others except the one that just changed
+                }
+            });
+
         }
     }
 
@@ -72,8 +84,12 @@ public class MainActivity extends AppCompatActivity {
             numResource[i]=getNumResource(i);
         }
 
-        setMaxHand();
-        setMaxBuild(calculateBuild(numResource));
+        setMaxHand(); // sets the maximum resource to be whatever the current hand is
+        setMaxBuild(calculateBuild(numResource)); // sets the maximum possible build for each purchase
+    }
+
+    public void remainingHand(){
+        int[] fullBuild = setMaxBuild(calculateBuild((numResource)));
     }
 
     private int[] calculateBuild(int[] hand){
@@ -126,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
         setHand(calculateHand(currentHand));
     }
 
+    /** Calculates and returns the new max hand given the change in build **/
     private int[] calculateHand(int[] hand){
         int[] currentHand = hand.clone();
         int[] currentBuild = new int[previousBuild.length];
@@ -136,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
             currentBuild[i] = getBuild(i);
         }
 
-        int[] changeBuild = a.getArrayDifference(currentBuild, previousBuild, 1);
+        int[] changeBuild = a.getArrayDifference(currentBuild, previousBuild, 1); //don't need this anymore
         previousBuild = currentBuild.clone();
 
         for(int i=0; i<previousBuild.length; i++){
